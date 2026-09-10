@@ -1,21 +1,17 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantDb } from '@/lib/tenant-db';
-import { prisma } from '@/lib/prisma';
+import { authenticateRequest } from '@/lib/auth-guard';
 
 export async function GET(request: NextRequest) {
   try {
+    const { errorResponse, authContext } = await authenticateRequest(request);
+    if (errorResponse || !authContext) {
+      return errorResponse!;
+    }
+
+    const { organizationId } = authContext;
     const { searchParams } = new URL(request.url);
-    let organizationId = searchParams.get('orgId') || request.headers.get('x-organization-id');
     const status = searchParams.get('status');
-
-    if (!organizationId) {
-      const firstOrg = await prisma.organization.findFirst({ select: { id: true } });
-      organizationId = firstOrg?.id || null;
-    }
-
-    if (!organizationId) {
-      return NextResponse.json({ error: 'OrganizationId não informado' }, { status: 400 });
-    }
 
     const tenantDb = getTenantDb(organizationId);
 
@@ -44,22 +40,13 @@ export async function GET(request: NextRequest) {
 
 export async function POST(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    let organizationId = searchParams.get('orgId') || request.headers.get('x-organization-id');
+    const { errorResponse, authContext } = await authenticateRequest(request);
+    if (errorResponse || !authContext) {
+      return errorResponse!;
+    }
+
+    const { organizationId, userId } = authContext;
     const body = await request.json();
-
-    if (!organizationId) {
-      organizationId = body.organizationId;
-    }
-
-    if (!organizationId) {
-      const firstOrg = await prisma.organization.findFirst({ select: { id: true } });
-      organizationId = firstOrg?.id || null;
-    }
-
-    if (!organizationId) {
-      return NextResponse.json({ error: 'OrganizationId não informado' }, { status: 400 });
-    }
 
     const {
       clienteId,
@@ -69,7 +56,6 @@ export async function POST(request: NextRequest) {
       valorPremio, // Preenchido exclusivamente pelo corretor humano
       dataInicio,
       dataVencimento,
-      userId,
     } = body;
 
     if (!clienteId || !seguradora || !tipoSeguro || !numeroApolice || !dataInicio || !dataVencimento) {
@@ -99,7 +85,7 @@ export async function POST(request: NextRequest) {
     await tenantDb.auditLog.create({
       data: {
         organizationId,
-        userId: userId || null,
+        userId,
         acao: 'CREATE',
         entidade: 'Apolice',
         entidadeId: apolice.id,

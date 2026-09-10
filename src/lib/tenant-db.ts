@@ -4,33 +4,36 @@ import { TenantAccessError } from './errors';
 
 export type TenantPrismaClient = ReturnType<typeof createTenantExtension>;
 
+type QueryHookParams = { args: any; query: (args: any) => Promise<any> };
+type FindUniqueParams = { args: any };
+
 function createTenantExtension(basePrisma: PrismaClient, organizationId: string) {
   return basePrisma.$extends({
     name: 'insurance-tenant-isolation',
     query: {
       cliente: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.cliente.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.cliente.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -39,7 +42,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.cliente.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -48,38 +51,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       apolice: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.apolice.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.apolice.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -88,7 +91,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.apolice.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -97,38 +100,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       cotacao: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.cotacao.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.cotacao.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -137,7 +140,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.cotacao.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -146,38 +149,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       sinistro: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.sinistro.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.sinistro.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -186,7 +189,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.sinistro.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -195,38 +198,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       conversation: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.conversation.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.conversation.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -235,7 +238,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.conversation.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -244,38 +247,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       message: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.message.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.message.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -284,7 +287,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.message.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -293,38 +296,38 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       whatsappConnection: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.whatsappConnection.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
-        async update({ args, query }) {
+        async update({ args, query }: QueryHookParams) {
           const record = await basePrisma.whatsappConnection.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -333,7 +336,7 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async delete({ args, query }) {
+        async delete({ args, query }: QueryHookParams) {
           const record = await basePrisma.whatsappConnection.findFirst({
             where: { ...args.where, organizationId },
           });
@@ -342,35 +345,35 @@ function createTenantExtension(basePrisma: PrismaClient, organizationId: string)
           }
           return query(args);
         },
-        async updateMany({ args, query }) {
+        async updateMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async deleteMany({ args, query }) {
+        async deleteMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
       },
       auditLog: {
-        async findMany({ args, query }) {
+        async findMany({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findFirst({ args, query }) {
+        async findFirst({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async findUnique({ args }) {
+        async findUnique({ args }: FindUniqueParams) {
           return basePrisma.auditLog.findFirst({
             where: { ...args.where, organizationId },
           });
         },
-        async count({ args, query }) {
+        async count({ args, query }: QueryHookParams) {
           args.where = { ...args.where, organizationId };
           return query(args);
         },
-        async create({ args, query }) {
-          args.data = { ...args.data, organizationId } as any;
+        async create({ args, query }: QueryHookParams) {
+          args.data = { ...args.data, organizationId };
           return query(args);
         },
       },

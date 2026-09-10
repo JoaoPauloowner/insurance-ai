@@ -1,22 +1,15 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantDb } from '@/lib/tenant-db';
-import { prisma } from '@/lib/prisma';
+import { authenticateRequest } from '@/lib/auth-guard';
 
 export async function GET(request: NextRequest) {
   try {
-    const { searchParams } = new URL(request.url);
-    let organizationId = searchParams.get('orgId') || request.headers.get('x-organization-id');
-
-    if (!organizationId) {
-      // Fallback para a primeira organização para facilitar visualização no dashboard
-      const firstOrg = await prisma.organization.findFirst({ select: { id: true } });
-      organizationId = firstOrg?.id || null;
+    const { errorResponse, authContext } = await authenticateRequest(request);
+    if (errorResponse || !authContext) {
+      return errorResponse!;
     }
 
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Tenant/OrganizationId não informado' }, { status: 400 });
-    }
-
+    const { organizationId } = authContext;
     const tenantDb = getTenantDb(organizationId);
 
     const pendingMessages = await tenantDb.message.findMany({

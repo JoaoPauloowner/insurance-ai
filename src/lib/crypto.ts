@@ -1,10 +1,15 @@
 import crypto from 'crypto';
 
 const ALGORITHM = 'aes-256-gcm';
-const DEFAULT_KEY_HEX = '0123456789abcdef0123456789abcdef0123456789abcdef0123456789abcdef';
 
 function getEncryptionKey(): Buffer {
-  const keyHex = process.env.ENCRYPTION_KEY || DEFAULT_KEY_HEX;
+  const keyHex = process.env.ENCRYPTION_KEY;
+  if (!keyHex || keyHex.trim() === '') {
+    throw new Error('ENCRYPTION_KEY não configurada no ambiente. Operação criptográfica abortada por segurança.');
+  }
+  if (keyHex.length !== 64) {
+    throw new Error('ENCRYPTION_KEY deve possuir exatamente 64 caracteres hexadecimais (256 bits).');
+  }
   return Buffer.from(keyHex, 'hex');
 }
 
@@ -61,7 +66,7 @@ export function maskCpf(rawCpf: string): string {
 
 /**
  * Mascara Telefone para logs
- * Ex: "+5511998765432" -> "+55 (11) *****-5432"
+ * Ex: "+5511998765432" -> "*****5432"
  */
 export function maskPhone(phone: string): string {
   if (!phone) return '';

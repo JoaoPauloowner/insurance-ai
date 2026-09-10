@@ -1,38 +1,28 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantDb } from '@/lib/tenant-db';
-import { prisma } from '@/lib/prisma';
 import { getMessagingProvider } from '@/lib/messaging/provider';
 import { decryptSensitive } from '@/lib/crypto';
 import { validateAiOutputWithoutPrice } from '@/lib/ai/schemas';
+import { authenticateRequest } from '@/lib/auth-guard';
 
 export async function POST(
   request: NextRequest,
   context: { params: Promise<{ id: string }> }
 ) {
   try {
+    const { errorResponse, authContext } = await authenticateRequest(request);
+    if (errorResponse || !authContext) {
+      return errorResponse!;
+    }
+
+    const { organizationId, userId } = authContext;
     const { id } = await context.params;
     const body = await request.json().catch(() => ({}));
-    const { editedContent, userId } = body;
-
-    const { searchParams } = new URL(request.url);
-    let organizationId = searchParams.get('orgId') || request.headers.get('x-organization-id');
-
-    // Se organizationId não foi enviado, busca a mensagem globalmente para identificar o tenant
-    if (!organizationId) {
-      const msg = await prisma.message.findUnique({
-        where: { id },
-        select: { organizationId: true },
-      });
-      organizationId = msg?.organizationId || null;
-    }
-
-    if (!organizationId) {
-      return NextResponse.json({ error: 'Tenant/OrganizationId não localizado' }, { status: 400 });
-    }
+    const { editedContent } = body;
 
     const tenantDb = getTenantDb(organizationId);
 
-    // 1. Busca a mensagem e verifica se está pendente de revisão
+    // 1. Busca a mensagem e verifica se está pendente de revisão nesta organização
     const message = await tenantDb.message.findUnique({
       where: { id },
       include: {
@@ -53,7 +43,7 @@ export async function POST(
 
     const finalContent = editedContent?.trim() ? editedContent.trim() : message.content;
 
-    // 2. Garante que o texto aprovado não possua anomalias
+    // 2. Garante que o texto aprovado não possua valores monetários
     validateAiOutputWithoutPrice(finalContent);
 
     // 3. Obtém credencial do WhatsApp para o tenant
@@ -87,7 +77,7 @@ export async function POST(
       data: {
         content: finalContent,
         reviewStatus: newStatus,
-        reviewedById: userId || null,
+        reviewedById: userId,
       },
     });
 
@@ -95,7 +85,7 @@ export async function POST(
     await tenantDb.auditLog.create({
       data: {
         organizationId,
-        userId: userId || null,
+        userId,
         acao: 'APPROVE_MESSAGE',
         entidade: 'Message',
         entidadeId: id,
