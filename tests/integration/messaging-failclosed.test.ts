@@ -1,8 +1,7 @@
-import { describe, it, expect, beforeAll, afterAll, beforeEach, afterEach } from 'vitest';
+import { describe, it, expect, beforeAll, afterAll } from 'vitest';
 import { createTestDatabase, TestDatabaseContext } from '../../src/lib/test-db';
 import { getTenantDb } from '../../src/lib/tenant-db';
 import { getMessagingProvider, MockMessagingProvider, MessagingConfigError } from '../../src/lib/messaging/provider';
-import { encryptSensitive } from '../../src/lib/crypto';
 
 /**
  * FASE 1 — Testes de integração: mensagens "enviadas" que na real não saem.
