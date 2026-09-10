@@ -190,4 +190,63 @@ describe('Insurance Multi-Tenant Isolation Integration Test', () => {
       })
     ).rejects.toThrow(TenantAccessError);
   });
+
+  it('deve isolar a Fila de Revisão Humana: Org B não pode ver, aprovar ou alterar minutas da Org A', async () => {
+    const dbA = getTenantDb(orgAId, prisma);
+    const dbB = getTenantDb(orgBId, prisma);
+
+    const convA = await dbA.conversation.create({
+      data: {
+        organizationId: orgAId,
+        remoteJid: '+5511911112222',
+        status: 'qualificado',
+      },
+    });
+
+    const msgA = await dbA.message.create({
+      data: {
+        organizationId: orgAId,
+        conversationId: convA.id,
+        direction: 'out',
+        content: 'Minuta confidencial da Org A aguardando aprovação.',
+        aiGenerated: true,
+        requiresReview: true,
+        reviewStatus: 'pending_review',
+      },
+    });
+
+    // 1. Org B não enxerga a mensagem pendente da Org A
+    const pendingB = await dbB.message.findMany({
+      where: { reviewStatus: 'pending_review' },
+    });
+    expect(pendingB.some((m) => m.id === msgA.id)).toBe(false);
+
+    // 2. Org B tenta buscar diretamente por ID e recebe null
+    const directFetch = await dbB.message.findUnique({
+      where: { id: msgA.id },
+    });
+    expect(directFetch).toBeNull();
+
+    // 3. Org B tenta alterar status da mensagem da Org A e é bloqueada com TenantAccessError
+    await expect(
+      dbB.message.update({
+        where: { id: msgA.id },
+        data: { reviewStatus: 'approved' },
+      })
+    ).rejects.toThrow(TenantAccessError);
+
+    // 4. Org B tenta deletar a mensagem da Org A e é bloqueada com TenantAccessError
+    await expect(
+      dbB.message.delete({
+        where: { id: msgA.id },
+      })
+    ).rejects.toThrow(TenantAccessError);
+
+    // 5. Minuta da Org A permanece intocada em pending_review
+    const msgAIntacta = await dbA.message.findUnique({
+      where: { id: msgA.id },
+    });
+    expect(msgAIntacta?.reviewStatus).toBe('pending_review');
+  });
 });
+

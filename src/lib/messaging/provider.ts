@@ -1,5 +1,7 @@
+import { ThreeSixtyDialogProvider } from './threesixtydialog';
+
 export interface SendMessageOptions {
-  to: string; // Número de telefone formato E.164 (ex: +5511999998888)
+  to: string; // Número de telefone formato E.164 (ex: +5511999998888 ou 5511999998888)
   text: string;
   templateName?: string;
   templateParams?: Record<string, string>;
@@ -32,4 +34,18 @@ export class MockMessagingProvider implements MessagingProvider {
       timestamp,
     };
   }
+
+  clear(): void {
+    this.sentMessages = [];
+  }
+}
+
+// Provedor singleton para testes e mock em ambiente de dev
+export const globalMockMessagingProvider = new MockMessagingProvider();
+
+export function getMessagingProvider(apiKey?: string): MessagingProvider {
+  if (apiKey && process.env.NODE_ENV === 'production') {
+    return new ThreeSixtyDialogProvider(apiKey);
+  }
+  return globalMockMessagingProvider;
 }

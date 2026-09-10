@@ -36,13 +36,26 @@ export type LeadQualificationOutput = z.infer<typeof LeadQualificationOutputSche
 /**
  * Validador estrito que inspeciona o texto gerado pela IA e garante
  * que nenhuma tentativa de alucinação de preço passe despercebida.
+ * Suporta tanto o objeto de saída de qualificação quanto strings de texto livre.
  */
-export function validateAiOutputWithoutPrice(output: LeadQualificationOutput): void {
+export function validateAiOutputWithoutPrice(output: LeadQualificationOutput | string): void {
   const prohibitedPatterns = [
     /R\$\s*\d+/i,
     /\b(preço|premio|prêmio|franquia|mensalidade|parcela)\s*:\s*\d+/i,
     /\b(custa|valor de|fica em)\s*R?\$/i,
+    /\b\d+\s*reais\b/i,
   ];
+
+  if (typeof output === 'string') {
+    for (const pattern of prohibitedPatterns) {
+      if (pattern.test(output)) {
+        throw new PriceGenerationForbiddenError(
+          'A resposta gerada pela IA continha menção ou cálculo de preço/valor, violando a regra de compliance da SUSEP.'
+        );
+      }
+    }
+    return;
+  }
 
   for (const pattern of prohibitedPatterns) {
     if (
