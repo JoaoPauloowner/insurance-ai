@@ -1,6 +1,6 @@
 import { NextRequest, NextResponse } from 'next/server';
 import { getTenantDb } from '@/lib/tenant-db';
-import { getMessagingProvider } from '@/lib/messaging/provider';
+import { getMessagingProvider, MessagingConfigError, MessagingProvider } from '@/lib/messaging/provider';
 import { decryptSensitive } from '@/lib/crypto';
 import { validateAiOutputWithoutPrice } from '@/lib/ai/schemas';
 import { authenticateRequest } from '@/lib/auth-guard';
@@ -46,21 +46,57 @@ export async function POST(
     // 2. Garante que o texto aprovado não possua valores monetários
     validateAiOutputWithoutPrice(finalContent);
 
-    // 3. Obtém credencial do WhatsApp para o tenant
+    // 3. Obtém credencial do WhatsApp para o tenant — FAIL-CLOSED
     const connection = await tenantDb.whatsappConnection.findFirst({
       where: { isActive: true },
     });
 
-    let apiKey: string | undefined;
-    if (connection?.apiKeyEncrypted) {
-      try {
-        apiKey = decryptSensitive(connection.apiKeyEncrypted);
-      } catch (err) {
-        console.warn('[Approve] Falha ao descriptografar chave 360dialog, usando mock provider');
-      }
+    let apiKey: string;
+    if (!connection?.apiKeyEncrypted) {
+      return NextResponse.json(
+        {
+          error: 'Falha ao enviar: nenhuma conexão WhatsApp ativa configurada para esta organização.',
+          messageStatus: 'pending_review',
+        },
+        { status: 502 }
+      );
     }
 
-    const messagingProvider = getMessagingProvider(apiKey);
+    try {
+      apiKey = decryptSensitive(connection.apiKeyEncrypted);
+    } catch (err) {
+      console.error('[Approve] Falha ao descriptografar chave 360dialog:', err);
+      return NextResponse.json(
+        {
+          error: 'Falha ao enviar: erro ao descriptografar credencial do WhatsApp. Verifique a ENCRYPTION_KEY e reconfigure a conexão.',
+          messageStatus: 'pending_review',
+        },
+        { status: 502 }
+      );
+    }
+
+    if (!apiKey || apiKey.trim() === '') {
+      return NextResponse.json(
+        {
+          error: 'Falha ao enviar: a API key do WhatsApp está vazia após descriptografia.',
+          messageStatus: 'pending_review',
+        },
+        { status: 502 }
+      );
+    }
+
+    let messagingProvider: MessagingProvider;
+    try {
+      messagingProvider = getMessagingProvider(apiKey);
+    } catch (err) {
+      if (err instanceof MessagingConfigError) {
+        return NextResponse.json(
+          { error: err.message, messageStatus: 'pending_review' },
+          { status: 502 }
+        );
+      }
+      throw err;
+    }
 
     // 4. Envia para o WhatsApp do cliente através da API Oficial
     const destinationPhone = message.conversation.remoteJid;
@@ -71,7 +107,7 @@ export async function POST(
 
     const newStatus = editedContent?.trim() ? 'edited' : 'approved';
 
-    // 5. Atualiza o status da mensagem
+    // 5. Atualiza o status da mensagem SOMENTE após envio bem-sucedido
     const updatedMessage = await tenantDb.message.update({
       where: { id },
       data: {
@@ -108,3 +144,4 @@ export async function POST(
     return NextResponse.json({ error: error?.message || 'Erro ao aprovar mensagem' }, { status: 500 });
   }
 }
+

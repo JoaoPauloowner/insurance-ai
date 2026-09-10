@@ -34,7 +34,10 @@ export function encryptSensitive(plainText: string): string {
  * Descriptografa dados sensíveis protegidos por AES-256-GCM
  */
 export function decryptSensitive(cipherText: string): string {
-  if (!cipherText || !cipherText.includes(':')) return '';
+  if (!cipherText) return '';
+  if (!cipherText.includes(':')) {
+    throw new Error('Formato inválido de dados criptografados.');
+  }
   const key = getEncryptionKey();
   const [ivHex, authTagHex, encryptedHex] = cipherText.split(':');
 
